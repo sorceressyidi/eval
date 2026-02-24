@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robot Policy Comparison Study</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .rating-btn.selected {
+      background-color: #2563EB;
+      color: white;
+      border-color: #1D4ED8;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      text-align: center;
+    }
+    .rating-btn.left {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      min-width: 160px;
+      background-color: #e3f2fd;
+      color: #1565c0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .rating-btn.tie {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      min-width: 160px;
+      background-color: #fff3e0;
+      color: #ef6c00;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .rating-btn.right {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      min-width: 160px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .rating-btn.left:hover:not(:disabled) {
+      background-color: #bbdefb;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    .rating-btn.tie:hover:not(:disabled) {
+      background-color: #ffe0b2;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    .rating-btn.right:hover:not(:disabled) {
+      background-color: #c8e6c9;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    .rating-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .rating-btn.left:active,
+    .rating-btn.tie:active,
+    .rating-btn.right:active {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transform: translateY(0);
+    }
+    .policy-a-header {
+      background: #e3f2fd;
+      padding: 8px;
+      border-radius: 8px;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+      margin-bottom: 0.5rem;
+    }
+    .policy-b-header {
+      background: #e8f5e9;
+      padding: 8px;
+      border-radius: 8px;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      margin-bottom: 0.5rem;
+    }
+    .rating-btn.left.selected {
+      background-color: #1976d2 !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) inset;
+    }
+    .rating-btn.tie.selected {
+      background-color: #f57c00 !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) inset;
+    }
+    .rating-btn.right.selected {
+      background-color: #388e3c !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2) inset;
+    }
+    textarea {
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    textarea:disabled {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+    }
+    #evaluationFieldset.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    #feedback-explanation {
+        white-space: pre-line;
+    }
+    #finishEarlyButton.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <div class="container mx-auto max-w-5xl p-4 md:p-8">
+    <div id="study-container" class="hidden">
+      <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-2" id="main-header">Which policy is better?</h1>
+      <p id="instruction" class="text-center text-lg text-gray-700 mb-4"></p>
+      <p id="progress" class="text-center text-gray-500 mb-6 font-mono"></p>
+
+      <div class="video-container grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+        <div class="video-column bg-white p-3 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold text-center policy-a-header">
+            Policy A <span class="sr-only" id="sourceLeft" aria-hidden="true"></span>
+          </h2>
+          <video id="videoLeft" class="w-full rounded-md bg-black" controls muted playsinline></video>
+          <div class="mt-3">
+              <label for="descriptionLeft" class="block text-sm font-medium text-gray-700 mb-1">Describe the robot's attempt to complete the task:</label>
+              <textarea id="descriptionLeft" name="descriptionLeft" rows="4" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="e.g., The robot reaches to the cup, picks it up and..."></textarea>
+          </div>
+        </div>
+        <div class="video-column bg-white p-3 rounded-lg shadow-md">
+          <h2 class="text-xl font-semibold text-center policy-b-header">
+            Policy B <span class="sr-only" id="sourceRight" aria-hidden="true"></span>
+          </h2>
+          <video id="videoRight" class="w-full rounded-md bg-black" controls muted playsinline></video>
+          <div class="mt-3">
+              <label for="descriptionRight" class="block text-sm font-medium text-gray-700 mb-1">Describe the robot's attempt to complete the task:</label>
+              <textarea id="descriptionRight" name="descriptionRight" rows="4" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="e.g., The robot made no meaningful move..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <form id="responseForm" class="bg-white p-4 rounded-lg shadow-md">
+        <div id="descriptionSubmitContainer" class="text-center mb-4">
+            <button type="button" id="submitDescriptionsBtn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-md hover:bg-indigo-700 disabled:bg-gray-400">Submit Descriptions</button>
+            <p class="text-xs text-gray-500 mt-1">Please provide descriptions for both videos to continue.</p>
+        </div>
+        <fieldset id="evaluationFieldset">
+          <legend class="text-lg font-semibold text-center mb-3">Your evaluation:</legend>
+          <div class="flex flex-wrap justify-center gap-3 mb-4" id="ratingButtonsContainer">
+            <button type="button" class="rating-btn left" data-value="left">👈 Left is Better</button>
+            <button type="button" class="rating-btn tie" data-value="same">🤝 Tie</button>
+            <button type="button" class="rating-btn right" data-value="right">Right is Better 👉</button>
+          </div>
+          <div class="text-center text-sm text-gray-600 -mt-2 mb-4">(equally good or equally bad)</div>
+          <div class="text-center">
+            <button type="submit" id="nextButton" class="bg-blue-600 text-white font-bold py-2 px-8 rounded-md hover:bg-blue-700 disabled:bg-gray-400" disabled>Next</button>
+          </div>
+          <div id="finishEarlyContainer" class="text-center mt-4 hidden">
+            <button type="button" id="finishEarlyButton" class="bg-red-500 text-white font-bold py-2 px-6 rounded-md hover:bg-red-600">
+              Finish Study Now
+            </button>
+            <p class="text-sm text-gray-500 mt-1 italic">You may finish at any time and submit your current progress.</p>
+          </div>
+        </fieldset>
+      </form>
+      <div class="text-center mt-4">
+        <p class="text-sm text-gray-500 italic">Please watch both videos before making a selection.</p>
+      </div>
+    </div>
+
+    <div id="quiz-failed-container" class="hidden text-center mt-10 p-8 bg-white rounded-lg shadow-xl">
+      <h2 class="text-3xl font-bold text-red-600 mb-4">Quiz Failed</h2>
+      <p class="text-lg text-gray-700 mb-6">Unfortunately, you did not pass the initial qualification quiz. Thank you for your time.</p>
+      <button id="returnHomeButton" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-md hover:bg-blue-700 transition-colors">Return to Home</button>
+    </div>
+
+    <div id="message-container" class="hidden text-center mt-10 p-8 bg-white rounded-lg shadow-xl">
+      <h2 id="message-header" class="text-3xl font-bold mb-4"></h2>
+      <p id="message-body" class="text-lg text-gray-700"></p>
+    </div>
+
+    <div id="completion" class="hidden text-center mt-10 p-8 bg-white rounded-lg shadow-xl">
+      <h2 class="text-3xl font-bold text-green-600 mb-4">All done! Thank you!</h2>
+      <p class="text-lg text-gray-700">Your completion code is:</p>
+      <p class="text-2xl font-mono bg-gray-100 p-3 my-3 inline-block rounded-md border border-gray-300" id="completionCode"></p>
+    </div>
+
+    <div id="error-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <h3 class="text-xl font-bold text-red-600 mb-4">Error</h3>
+        <p id="error-message" class="text-gray-700"></p>
+      </div>
+    </div>
+
+    <!-- Quiz Feedback Modal -->
+    <div id="feedback-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <h3 id="feedback-header" class="text-2xl font-bold mb-3"></h3>
+        <p id="feedback-explanation" class="text-gray-700 mb-5"></p>
+        <button id="feedback-continue-button" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-md hover:bg-blue-700">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function () {
+      // ========== CONFIGURATION - EDIT THIS SECTION ==========
+      
+      const STUDY_CONFIG = {
+        // Quiz configuration (paid workers only)
+        QUIZ_PASS_THRESHOLD: 0.8,  // 80% correct to pass (8 out of 10)
+        NUM_INITIAL_QUIZ: 10,      // Number of quiz questions at the start
+      };
+
+      // All quiz pairs pool (40 pairs total)
+      // First 10 (INITIAL_QUIZ_INDICES) are used for the initial qualification quiz.
+      // The remaining 30 are embedded as hidden sanity checks in FIXED_MAIN_STUDY_SEQUENCE.
+      const ALL_QUIZ_PAIRS = {
+        // Original 10 quiz pairs (used for initial quiz for paid workers)
+        13: { 
+          correct_answer: 'left', 
+          explanation: 'Policy A: The left robot reaches the can and then moves it to the right of the pot.\nPolicy B: The right robot only reaches the can without moving it.' 
+        },
+        25: { 
+          correct_answer: 'same', 
+          explanation: 'Policy A: The left robot reaches the can and then moves it to the right of the pot.\nPolicy B: The right robot reaches the can and then moves it to the right of the pot.' 
+        },
+        52: { 
+          correct_answer: 'left', 
+          explanation: 'Policy A: The left robot reaches the can and then moves it to the right of the pot.\nPolicy B: The right robot only reaches the can without moving it.' 
+        },
+        638: { 
+          correct_answer: 'right', 
+          explanation: 'Policy A: The left robot reaches the cloth and makes some movements to move it but fails.\nPolicy B: The right robot reaches the cloth, and then moves it to the bottom left of the table below the yellow pepper.' 
+        },
+        695: { 
+          correct_answer: 'left', 
+          explanation: 'Policy A: The left robot reaches the cloth, makes some attempts to finish the task and moves the cloth a bit.\nPolicy B: The right robot makes no meaningful movement.' 
+        },
+        2544: { 
+          correct_answer: 'left', 
+          explanation: 'Policy A: The left robot reaches the spoon, picks it up and puts it on the yellow cloth.\nPolicy B: The right robot reaches the spoon, tries to pick it up but fails.' 
+        },
+        4210: { 
+          correct_answer: 'left', 
+          explanation: 'Policy A: The left robot reaches the blue bowl, grasps it and moves it to the upper right side of the table.\nPolicy B: The right robot only tries to reach the blue fork.' 
+        },
+        4683: { 
+          correct_answer: 'right', 
+          explanation: 'Policy A: The left robot makes no meaningful move. \nPolicy B:The right robot reaches the cylinder, and moves it to the right of the chess pawn.'
+        },
+        4790: { 
+          correct_answer: 'right', 
+          explanation: 'Policy A: The left robot makes no meaningful move. \n Policy B: The right robot moves the cylinder to the right side of the chess pawn. \n' 
+        },
+        8230: { 
+          correct_answer: 'same', 
+          explanation: 'Policy A: The left robot moves closer to the knife but does not pick it up.\nPolicy B: The right robot moves closer to the knife but does not pick it up.' 
+        },
+        // Additional 30 quiz pairs for sanity checks (selected using this tool)
+        // Move the can to the right of the pot (octo vs spatial)
+        1: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the can and then moves it to the right of the pot.\nPolicy B: The right robot only reaches the can without moving it.'
+        },
+        // Move the can to the right of the pot (cogact vs octo)
+        100: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot moves the can to the right of the pot.\nPolicy B: The right robot reaches the can and then attemps to move it a bit but fails to finish the task.'
+        },
+        // Move the cheese into the silver pot (octo vs xvla)
+        200: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the cheese.\nPolicy B: The right robot reaches the cheese, picks it up and puts it beside the silver pot.'
+        },
+        // Move the cheese into the silver pot (octo vs robovlm)
+        300: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot makes no meaningful movement.\nPolicy B: The right robot reaches the cheese and moves it beside the silver pot.'
+        },
+        800: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the knife, picks it up and puts it a little down between the pot and the pepper\nPolicy B: The right robot reaches the knife and tries to pick it up.'
+        },
+        900: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot reaches the pot and only tries to pick it up.\nPolicy B: The right robot reaches the pot, picks it up and puts it on the towel.'
+        },
+        // Pick up milk bottle (cogact vs spatial)
+        1100: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot reaches and moves it blue cloth.\nPolicy B: The right robot reaches the picks up the milk bottle.'
+        },
+        // Pick up the salmon and put it in the pot (cogact vs robovlm)
+        1300: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the salmon, picks it up and puts inside the pot.\nPolicy B: The right robot only reaches the pot.'
+        },
+        1600: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the brush, picks it up and puts it on the napkin.\nPolicy B: The right robot only reaches the brush without picking it up.'
+        },
+        // Place the metal pot on the front left corner of the purple towel (octo vs spatial)
+        2000: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot makes no meaningful movement.\nPolicy B: The right robot reaches the pot and tries to pick it up.\n   '
+        },
+        // Put the metal pan on the blue cloth (cogact vs spatial)
+        2700: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the pan, picks it up and puts it on the blue cloth\nPolicy B: The right robot makes no meaningful movement.'
+        },
+        // Put the metal pan on the blue cloth_test0 (pi0 vs spatial)
+        2800: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the pan, picks it up and on the cloth.\nPolicy B: The right robot only reaches the pan.'
+        },
+        // Put the spoon on top of the purple towel (cogact vs octo)
+        3000: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the spoon, picks it up and puts it on the cloth.\nPolicy B: The right robot only reaches spoon a bit.'
+        },
+        // Put the stuffed dog inside the pot (pi0 vs spatial)
+        3171: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the stuffed dog, picks it up and puts beside the pot.\nPolicy B: The right robot only reaches the stuffed dog and picks it up.'
+        },
+        // Put the stuffed dog inside the pot_test0 (cogact vs robovlm)
+        3301: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the stuffed dog.\nPolicy B: The right robot reaches the stuffed dog, picks it up and puts it inside the pot.'
+        },
+        // Put the stuffed dog inside the pot_test0 (octo vs pi0)
+        3331: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the stuffed dog.\nPolicy B: The right robot reaches the stuffed dog, picks it up and puts it inside the pot.'
+        },
+        // Put the stuffed dog inside the pot_test0 (octo vs xvla)
+        3340: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the stuffed dog.\nPolicy B: The right robot reaches the stuffed dog, picks it up and puts it inside the pot.'
+        },
+        // move blue cloth from center to right bottom corner (cogact vs spatial)
+        3600: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches cloth and moves it a bit to the right bottom corner\nPolicy B: The right robot only reaches the cloth.'
+        },
+        // move the blue brush to the upper left corner of the table (pi0 vs xvla)
+        4300: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the brush.\nPolicy B: The right robot reaches the blue brush and moves it to the upper left corner of the table'
+        },
+        // move the cylinder to the right side of the chess pawn (cogact vs octo)
+        4700: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot only reaches the cylinder and moves it a bit to the right.\nPolicy B: The right robot makes no meaningful movement.'
+        },
+        // moved the brown transparent bowl to the right side of the table (robovlm vs xvla)
+        6400: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the bowl and tries to pick it up.\nPolicy B: The right robot reaches the bowl and picks it up.'
+        },
+        // put banana in colander_test0 (octo vs pi0)
+        7400: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the banana and picks it up.\nPolicy B: The right robot reaches the banana, picks it up and puts it inside the pot.'
+        },
+        // put banana in colander_test0 (pi0 vs xvla)
+        7404: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the banana and puts it inside the pot.\nPolicy B: The right robot reaches pot.'
+        },
+        // put banana in colander_test0 (spatial vs xvla)
+        7411: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the banana and tries to pick it up.\nPolicy B: The right robot reaches the banana, picks it up and puts it inside the pot.'
+        },
+        // put banana in colander_test0 (cogact vs xvla)
+        7423: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the banana and tries to pick it up.\nPolicy B: The right robot reaches the banana, picks it up and puts it inside the pot.'
+        },
+        // put blue cube to left corner of the table (cogact vs robovlm)
+        7517: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the blue cube and picks it up.\nPolicy B: The right robot makes no meaningful movement.'
+        },
+        // put knife on towel (pi0 vs spatial)
+        8407: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the knife, picks it up and puts it on the green cloth.\nPolicy B: The right robot only reaches the knife and tries to pick it up.'
+        },
+        // put knife on towel (spatial vs xvla)
+        8408: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the knife.\nPolicy B: The right robot reaches the knife, picks it up and puts it on the green cloth.'
+        },
+        // put knife on towel_test0 (octo vs xvla)
+        8503: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the knife.\nPolicy B: The right robot reaches the knife, picks it up and puts it on the green cloth.'
+        },
+        // put lid on pot (cogact vs pi0)
+        8506: {
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot only reaches the lid.\nPolicy B: The right robot reaches the lid, picks it up and puts it on the pot.'
+        }
+      };
+
+      // First 10 indices are used for initial quiz (paid workers only)
+      const INITIAL_QUIZ_INDICES = [13, 25, 52, 638, 695, 2544, 4210, 4683, 4790, 8230];
+
+      // Fixed main study sequence: 100 pairs, same for every participant.
+      // 70 regular pairs + 30 sanity-check pairs (the non-quiz ALL_QUIZ_PAIRS),
+      // distributed ~3 sanity checks per batch of 10.
+      const FIXED_MAIN_STUDY_SEQUENCE = [
+        // Batch 1 (3 sanity: 1, 100, 200)
+        2, 150, 350, 500, 650, 750, 950, 1, 100, 200,
+        // Batch 2 (3 sanity: 300, 800, 900)
+        1050, 1200, 1400, 1500, 1700, 1800, 1900, 300, 800, 900,
+        // Batch 3 (3 sanity: 1100, 1300, 1600)
+        2100, 2200, 2300, 2400, 2500, 9100, 2650, 1100, 1300, 1600,
+        // Batch 4 (3 sanity: 2000, 2700, 2800)
+        2750, 2900, 3050, 3100, 3200, 3250, 3400, 2000, 2700, 2800,
+        // Batch 5 (3 sanity: 3000, 3171, 3301)
+        3500, 3700, 3800, 3900, 4000, 4100, 4150, 3000, 3171, 3301,
+        // Batch 6 (3 sanity: 3331, 3340, 3600)
+        4400, 4500, 4600, 4800, 4900, 5000, 5100, 3331, 3340, 3600,
+        // Batch 7 (3 sanity: 4300, 4700, 6400)
+        5200, 5300, 5400, 5500, 5600, 5700, 5800, 4300, 4700, 6400,
+        // Batch 8 (3 sanity: 7400, 7404, 7411)
+        5900, 6000, 6100, 6200, 6300, 6500, 6600, 7400, 7404, 7411,
+        // Batch 9 (3 sanity: 7423, 7517, 8407)
+        6700, 6800, 6900, 7000, 7100, 7200, 7300, 7423, 7517, 8407,
+        // Batch 10 (3 sanity: 8408, 8503, 8506)
+        7450, 10010, 7700, 7800, 7900, 8000, 8100, 8408, 8503, 8506
+      ];
+
+      // ========== END CONFIGURATION ==========
+
+      // Helper Functions
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+      
+      function generateCompletionCode(length = 8) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+      }
+      
+      function showErrorModal(message) {
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('error-modal').classList.remove('hidden');
+      }
+
+      // Check participant type and ID
+      const participantType = localStorage.getItem('participantType');
+      const participantId = localStorage.getItem('participantId');
+      
+      if (!participantType || !participantId) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const isPaidWorker = participantType === 'paid';
+      
+      // Progress Management
+      const progressKey = `progress_vfixed_${participantId}`;
+
+      function saveProgress(data) {
+        localStorage.setItem(progressKey, JSON.stringify(data)); 
+      }
+      
+      function loadProgress() {
+        const savedData = localStorage.getItem(progressKey);
+        return savedData ? JSON.parse(savedData) : null;
+      }
+      
+      function clearProgress() { 
+        localStorage.removeItem(progressKey); 
+      }
+
+      // State Variables
+      let allPairs;
+      let participantState = {
+        participantType: participantType,
+        phase: 'loading', // 'quiz', 'main_study', 'quiz_failed', 'completed'
+        
+        // For paid workers: quiz phase
+        quizIndices: [],           // Indices for initial quiz (paid workers only)
+        quizCurrentIndex: 0,
+        quizScore: 0,
+        quizAnswered: 0,
+        
+        // Main study indices (includes sanity checks mixed in)
+        mainStudySequence: [],     // Combined sequence of regular + sanity check videos
+        mainStudyCurrentIndex: 0,
+        
+        // Sanity check tracking (hidden from user)
+        // Every 10 videos, 2 random sanity checks are inserted
+        sanityCheckIndices: [],    // Which pair indices are sanity checks
+        sanityCheckResults: [],    // Results of sanity checks: [{index, correct, position}]
+        sanityFailures: 0,         // Total count of failures (kick out at 2)
+        
+        // Responses and timing
+        responses: [],
+        accumulatedTimeMs: 0,
+        sessionStartTime: null,
+      };
+
+      // UI Elements
+      const studyContainer = document.getElementById('study-container');
+      const instructionElem = document.getElementById('instruction');
+      const progressElem = document.getElementById('progress');
+      const videoLeft = document.getElementById('videoLeft');
+      const videoRight = document.getElementById('videoRight');
+      const nextButton = document.getElementById('nextButton');
+      const form = document.getElementById('responseForm');
+      const completionElem = document.getElementById('completion');
+      const completionCodeElem = document.getElementById('completionCode');
+      const ratingButtons = document.querySelectorAll('.rating-btn');
+      const messageContainer = document.getElementById('message-container');
+      const messageHeader = document.getElementById('message-header');
+      const messageBody = document.getElementById('message-body');
+      const descriptionLeft = document.getElementById('descriptionLeft');
+      const descriptionRight = document.getElementById('descriptionRight');
+      const submitDescriptionsBtn = document.getElementById('submitDescriptionsBtn');
+      const evaluationFieldset = document.getElementById('evaluationFieldset');
+      const finishEarlyButton = document.getElementById('finishEarlyButton');
+      const finishEarlyContainer = document.getElementById('finishEarlyContainer');
+      const quizFailedContainer = document.getElementById('quiz-failed-container');
+      const returnHomeButton = document.getElementById('returnHomeButton');
+      const feedbackModal = document.getElementById('feedback-modal');
+      const feedbackHeader = document.getElementById('feedback-header');
+      const feedbackExplanation = document.getElementById('feedback-explanation');
+      const feedbackContinueButton = document.getElementById('feedback-continue-button');
+
+      returnHomeButton?.addEventListener('click', () => {
+        clearProgress();
+        window.location.href = 'index.html';
+      });
+
+      // Load pairs.json
+      try {
+        const res = await fetch('./videos/pairs.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+        allPairs = await res.json();
+      } catch (err) {
+        console.error('Failed to load pairs.json:', err);
+        showErrorModal('⚠️ Could not load videos. Please ensure pairs.json exists.');
+        return;
+      }
+
+      function initializeStudy() {
+        const savedProgress = loadProgress();
+
+        if (savedProgress) {
+          participantState = savedProgress;
+          participantState.sessionStartTime = Date.now();
+
+          console.log(`\n🔄 ========== RESTORED PROGRESS ==========`);
+          console.log(`Phase: ${participantState.phase}`);
+          if (participantState.phase === 'quiz') {
+            console.log(`Quiz Progress: ${participantState.quizCurrentIndex}/${participantState.quizIndices.length}`);
+          }
+          console.log(`Main Study Progress: ${participantState.mainStudyCurrentIndex}/${participantState.mainStudySequence.length}`);
+          console.log(`Sanity Failures: ${participantState.sanityFailures || 0}`);
+          console.log(`==========================================\n`);
+
+          runPhase();
+          return;
+        }
+
+        // Fresh start — fixed sequence, identical for every participant
+        const initialQuizSet = new Set(INITIAL_QUIZ_INDICES);
+        const sanityCheckIndices = Object.keys(ALL_QUIZ_PAIRS)
+          .map(Number)
+          .filter(i => !initialQuizSet.has(i));
+
+        participantState.quizIndices = [...INITIAL_QUIZ_INDICES]; // fixed order, no shuffle
+        participantState.mainStudySequence = [...FIXED_MAIN_STUDY_SEQUENCE];
+        participantState.sanityCheckIndices = sanityCheckIndices;
+        participantState.phase = 'quiz';
+
+        console.log(`\n🚀 ========== FRESH START ==========`);
+        console.log(`Quiz Indices (${participantState.quizIndices.length}): ${participantState.quizIndices.join(', ')}`);
+        console.log(`Main Study Sequence Length: ${participantState.mainStudySequence.length}`);
+        console.log(`Sanity Check Indices (${participantState.sanityCheckIndices.length}): ${participantState.sanityCheckIndices.join(', ')}`);
+        console.log(`===================================\n`);
+
+        participantState.sessionStartTime = Date.now();
+        saveProgress(participantState);
+        runPhase();
+      }
+
+      function runPhase() {
+        // Hide all containers
+        studyContainer.classList.add('hidden');
+        quizFailedContainer.classList.add('hidden');
+        messageContainer.classList.add('hidden');
+        completionElem.classList.add('hidden');
+        feedbackModal.classList.add('hidden');
+
+        switch (participantState.phase) {
+          case 'quiz':
+            loadQuizPair();
+            break;
+          case 'main_study':
+            loadMainStudyPair();
+            break;
+          case 'quiz_failed':
+            showQuizFailed();
+            break;
+          case 'completed':
+            showCompletion();
+            break;
+        }
+      }
+
+      function resetUIForNewPair() {
+        descriptionLeft.value = '';
+        descriptionRight.value = '';
+        descriptionLeft.disabled = false;
+        descriptionRight.disabled = false;
+        submitDescriptionsBtn.disabled = false;
+        document.getElementById('descriptionSubmitContainer').classList.remove('hidden');
+        evaluationFieldset.classList.add('disabled');
+        ratingButtons.forEach(btn => btn.classList.remove('selected'));
+        nextButton.disabled = true;
+        finishEarlyButton.disabled = true;
+      }
+
+      function loadQuizPair() {
+        if (participantState.quizCurrentIndex >= participantState.quizIndices.length) {
+          // Quiz complete - evaluate
+          evaluateQuiz();
+          return;
+        }
+        
+        studyContainer.classList.remove('hidden');
+        document.getElementById('main-header').textContent = 'Qualification Quiz';
+        finishEarlyContainer.classList.add('hidden');
+        
+        progressElem.textContent = `Quiz Question ${participantState.quizCurrentIndex + 1} of ${participantState.quizIndices.length}`;
+        
+        const originalIndex = participantState.quizIndices[participantState.quizCurrentIndex];
+        const pair = allPairs[originalIndex];
+        loadVideos(pair);
+      }
+
+      function loadMainStudyPair() {
+        if (participantState.mainStudyCurrentIndex >= participantState.mainStudySequence.length) {
+          showCompletion();
+          return;
+        }
+        
+        studyContainer.classList.remove('hidden');
+        document.getElementById('main-header').textContent = 'Which policy is better?';
+        finishEarlyContainer.classList.add('hidden');
+
+        const position = participantState.mainStudyCurrentIndex;
+        const originalIndex = participantState.mainStudySequence[position];
+        const isSanity = participantState.sanityCheckIndices.includes(originalIndex);
+        
+        progressElem.textContent = `Video ${position + 1} of ${participantState.mainStudySequence.length}`;
+        
+        // Debug log
+        console.log(`📹 Loading video: position=${position}, pairIndex=${originalIndex}, isSanity=${isSanity}`);
+        
+        const pair = allPairs[originalIndex];
+        if (!pair) {
+          console.error(`❌ ERROR: No pair found at index ${originalIndex}!`);
+          showErrorModal(`Video pair not found at index ${originalIndex}. Please contact support.`);
+          return;
+        }
+        loadVideos(pair);
+      }
+
+      function loadVideos(pair) {
+        const match = pair.instruction.match(/^[^_]+_([^_]+)_/);
+        const cleanedInstruction = match ? match[1].replace(/_/g, ' ') : pair.instruction;
+        instructionElem.innerHTML = `<strong>Task:</strong> ${cleanedInstruction}`;
+        videoLeft.src = pair.videoA.path;
+        videoRight.src = pair.videoB.path;
+        videoLeft.currentTime = 0;
+        videoRight.currentTime = 0;
+        resetUIForNewPair();
+      }
+
+      function showQuizFeedback(isCorrect, explanation) {
+        if (isCorrect) {
+          feedbackHeader.textContent = '✅ Correct!';
+          feedbackHeader.className = 'text-2xl font-bold mb-3 text-green-600';
+        } else {
+          feedbackHeader.textContent = '❌ Incorrect';
+          feedbackHeader.className = 'text-2xl font-bold mb-3 text-red-600';
+        }
+        feedbackExplanation.textContent = `Explanation:\n${explanation}`;
+        feedbackModal.classList.remove('hidden');
+      }
+
+      function evaluateQuiz() {
+        const score = participantState.quizScore / participantState.quizIndices.length;
+        
+        if (score >= STUDY_CONFIG.QUIZ_PASS_THRESHOLD) {
+          // Passed quiz - continue to main study
+          participantState.phase = 'main_study';
+          saveProgress(participantState);
+          runPhase();
+        } else {
+          // Failed quiz
+          participantState.phase = 'quiz_failed';
+          saveProgress(participantState);
+          submitData(true);
+          showQuizFailed();
+        }
+      }
+
+      function showQuizFailed() {
+        studyContainer.classList.add('hidden');
+        quizFailedContainer.classList.remove('hidden');
+      }
+
+      // Form submission handler
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const selectedBtn = document.querySelector('.rating-btn.selected');
+        if (!selectedBtn) return;
+        
+        const selectedPreference = selectedBtn.getAttribute('data-value');
+        const descLeftText = descriptionLeft.value;
+        const descRightText = descriptionRight.value;
+
+        if (participantState.phase === 'quiz') {
+          // Quiz phase (paid workers only - 10 initial quiz questions)
+          const originalIndex = participantState.quizIndices[participantState.quizCurrentIndex];
+          const quizItem = ALL_QUIZ_PAIRS[originalIndex];
+          const isCorrect = selectedPreference === quizItem.correct_answer;
+          
+          // 🔍 DEBUG: Quiz submission
+          const currentPair = allPairs[originalIndex];
+          console.log(`\n========== QUIZ SUBMIT ==========`);
+          console.log(`Quiz #${participantState.quizCurrentIndex + 1}/${participantState.quizIndices.length}`);
+          console.log(`Pair Index: ${originalIndex}`);
+          console.log(`VideoA: ${currentPair?.videoA?.path}`);
+          console.log(`VideoB: ${currentPair?.videoB?.path}`);
+          console.log(`User Answer: ${selectedPreference}`);
+          console.log(`Correct Answer: ${quizItem.correct_answer}`);
+          console.log(`Result: ${isCorrect ? '✅ CORRECT' : '❌ WRONG'}`);
+          console.log(`==================================\n`);
+          
+          if (isCorrect) {
+            participantState.quizScore++;
+          }
+          
+          participantState.responses.push({
+            answer: `${selectedPreference}_${originalIndex}`,
+            description_A: descLeftText,
+            description_B: descRightText,
+            type: 'quiz',
+            correct: isCorrect
+          });
+          
+          participantState.quizCurrentIndex++;
+          participantState.quizAnswered++;
+          saveProgress(participantState);
+          
+          // Show feedback for quiz
+          showQuizFeedback(isCorrect, quizItem.explanation);
+          
+        } else if (participantState.phase === 'main_study') {
+          // Main study phase
+          const position = participantState.mainStudyCurrentIndex;
+          const originalIndex = participantState.mainStudySequence[position];
+          
+          // Check if this is a sanity check (hidden from user)
+          const isSanityCheck = participantState.sanityCheckIndices.includes(originalIndex);
+          
+          // 🔍 DEBUG: Main study submission
+          const currentPair = allPairs[originalIndex];
+          console.log(`\n========== MAIN STUDY SUBMIT ==========`);
+          console.log(`Position: ${position + 1}/${participantState.mainStudySequence.length}`);
+          console.log(`Pair Index: ${originalIndex}`);
+          console.log(`Type: ${isSanityCheck ? '🔴 SANITY CHECK' : '⚪ REGULAR'}`);
+          console.log(`Instruction: ${currentPair?.instruction}`);
+          console.log(`VideoA: ${currentPair?.videoA?.path}`);
+          console.log(`VideoB: ${currentPair?.videoB?.path}`);
+          console.log(`User Answer: ${selectedPreference}`);
+          if (isSanityCheck) {
+            const quizItem = ALL_QUIZ_PAIRS[originalIndex];
+            console.log(`Correct Answer: ${quizItem?.correct_answer}`);
+            console.log(`Result: ${selectedPreference === quizItem?.correct_answer ? '✅ CORRECT' : '❌ WRONG'}`);
+          }
+          console.log(`========================================\n`);
+          
+          if (isSanityCheck) {
+            const quizItem = ALL_QUIZ_PAIRS[originalIndex];
+            const isCorrect = selectedPreference === quizItem.correct_answer;
+            
+            participantState.sanityCheckResults.push({
+              index: originalIndex,
+              correct: isCorrect,
+              position: position,
+              userAnswer: selectedPreference,
+              correctAnswer: quizItem.correct_answer
+            });
+            
+            participantState.responses.push({
+              answer: `${selectedPreference}_${originalIndex}`,
+              description_A: descLeftText,
+              description_B: descRightText,
+              type: 'sanity_check',
+              correct: isCorrect
+            });
+            
+            if (!isCorrect) {
+              participantState.sanityFailures++;
+            }
+          } else {
+            // Regular video
+            participantState.responses.push({
+              answer: `${selectedPreference}_${originalIndex}`,
+              description_A: descLeftText,
+              description_B: descRightText,
+              type: 'regular'
+            });
+          }
+          
+          participantState.mainStudyCurrentIndex++;
+          saveProgress(participantState);
+          runPhase();
+        }
+      });
+
+      // Quiz feedback continue button
+      feedbackContinueButton.addEventListener('click', () => {
+        feedbackModal.classList.add('hidden');
+        runPhase();
+      });
+
+      function submitData(isFailed = false) {
+        let finalParticipantId = participantId;
+
+        if (isFailed && participantState.phase === 'quiz_failed') {
+          finalParticipantId += '_quiz_failed';
+        }
+        
+        const code = isFailed ? 'INCOMPLETE' : generateCompletionCode();
+        const currentSessionDuration = Date.now() - participantState.sessionStartTime;
+        const totalTimeMs = participantState.accumulatedTimeMs + currentSessionDuration;
+
+        const payload = {
+          participant_id: finalParticipantId,
+          participant_type: participantType,
+          completion_code: code,
+          total_time_ms: totalTimeMs,
+          response_length: participantState.responses.length,
+          quiz_score: participantState.quizScore,
+          quiz_total: participantState.quizIndices.length,
+          sanity_check_results: participantState.sanityCheckResults,
+          sanity_checks_passed: participantState.sanityCheckResults.filter(r => r.correct).length,
+          sanity_checks_total: participantState.sanityCheckResults.length,
+          sanity_failures: participantState.sanityFailures,
+          failed: isFailed,
+          failure_reason: isFailed ? participantState.phase : null,
+          responses: participantState.responses,
+          timestamp: new Date().toISOString(),
+          config_version: 'v5.0'
+        };
+
+        console.log("Submitting payload:", payload);
+        const backendApiUrl = "https://robotarenainf.zhangyidi.tech/annotate";
+
+        fetch(backendApiUrl, {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') console.log("✅ Submission successful:", data.message);
+          else console.error("❌ Submission failed on server:", data.message);
+        })
+        .catch(error => console.error("Submission failed due to network error:", error));
+
+        if (!isFailed) {
+          clearProgress();
+        }
+        
+        return code;
+      }
+      
+      function showCompletion() {
+        studyContainer.classList.add('hidden');
+        participantState.phase = 'completed';
+        const completionCode = submitData(false);
+        completionCodeElem.textContent = completionCode;
+        completionElem.classList.remove('hidden');
+      }
+
+      // Event Listeners
+      window.addEventListener('beforeunload', () => {
+        if (participantState.phase !== 'completed' && participantState.sessionStartTime) {
+          const currentSessionDuration = Date.now() - participantState.sessionStartTime;
+          participantState.accumulatedTimeMs += currentSessionDuration;
+          saveProgress(participantState);
+        }
+      });
+      
+      submitDescriptionsBtn.addEventListener('click', () => {
+        if (descriptionLeft.value.trim() === '' || descriptionRight.value.trim() === '') {
+          alert('Please describe the robot actions for both videos before submitting.');
+          return;
+        }
+        descriptionLeft.disabled = true;
+        descriptionRight.disabled = true;
+        submitDescriptionsBtn.disabled = true;
+        document.getElementById('descriptionSubmitContainer').classList.add('hidden');
+        evaluationFieldset.classList.remove('disabled');
+      });
+
+      ratingButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          ratingButtons.forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          nextButton.disabled = false;
+          finishEarlyButton.disabled = false;
+        });
+      });
+
+      finishEarlyButton.addEventListener('click', () => showCompletion());
+
+      // Start the application
+      initializeStudy();
+
+    })();
+  </script>
+  
+</body>
+</html>
