@@ -258,9 +258,9 @@
       // The remaining 30 are embedded as hidden sanity checks in FIXED_MAIN_STUDY_SEQUENCE.
       const ALL_QUIZ_PAIRS = {
         // Original 10 quiz pairs (used for initial quiz for paid workers)
-        13: { 
+        14: {  
           correct_answer: 'left', 
-          explanation: 'Policy A: The left robot reaches the can and then moves it to the right of the pot.\nPolicy B: The right robot only reaches the can without moving it.' 
+          explanation: 'Policy A: The left robot reaches the can and then moves it to the right of the pot.\nPolicy B: The right robot only reaches the can and tries to move it.' 
         },
         25: { 
           correct_answer: 'same', 
@@ -278,9 +278,9 @@
           correct_answer: 'left', 
           explanation: 'Policy A: The left robot reaches the cloth, makes some attempts to finish the task and moves the cloth a bit.\nPolicy B: The right robot makes no meaningful movement.' 
         },
-        2544: { 
+        2548: {
           correct_answer: 'left', 
-          explanation: 'Policy A: The left robot reaches the spoon, picks it up and puts it on the yellow cloth.\nPolicy B: The right robot reaches the spoon, tries to pick it up but fails.' 
+          explanation: 'Policy A: The left robot reaches the spoon, picks it up and puts it on the yellow cloth.\nPolicy B: The right robot reaches the spoon and tries to pick it up.' 
         },
         4210: { 
           correct_answer: 'left', 
@@ -292,9 +292,9 @@
         },
         4790: { 
           correct_answer: 'right', 
-          explanation: 'Policy A: The left robot makes no meaningful move. \n Policy B: The right robot moves the cylinder to the right side of the chess pawn. \n' 
+          explanation: 'Policy A: The left robot only tries a bit to reach the cylinder. \n Policy B: The right robot moves the cylinder to the right side of the chess pawn. \n' 
         },
-        8230: { 
+        8231: {
           correct_answer: 'same', 
           explanation: 'Policy A: The left robot moves closer to the knife but does not pick it up.\nPolicy B: The right robot moves closer to the knife but does not pick it up.' 
         },
@@ -323,17 +323,17 @@
           correct_answer: 'left',
           explanation: 'Policy A: The left robot reaches the knife, picks it up and puts it a little down between the pot and the pepper\nPolicy B: The right robot reaches the knife and tries to pick it up.'
         },
-        900: {
-          correct_answer: 'right',
-          explanation: 'Policy A: The left robot reaches the pot and only tries to pick it up.\nPolicy B: The right robot reaches the pot, picks it up and puts it on the towel.'
+        931: {
+          correct_answer: 'left',
+          explanation: 'Policy A: The left robot reaches the pot, picks it up and puts it on the towel.\nPolicy B: The right robot reaches the pot and tries to pick it up.'
         },
         // Pick up milk bottle (cogact vs spatial)
-        1100: {
+        1065: {
           correct_answer: 'right',
-          explanation: 'Policy A: The left robot reaches and moves it blue cloth.\nPolicy B: The right robot reaches the picks up the milk bottle.'
+          explanation: 'Policy A: The left robot reaches and moves the blue cloth.\nPolicy B: The right robot reaches and picks up the milk bottle.'
         },
         // Pick up the salmon and put it in the pot (cogact vs robovlm)
-        1300: {
+        1323: {
           correct_answer: 'left',
           explanation: 'Policy A: The left robot reaches the salmon, picks it up and puts inside the pot.\nPolicy B: The right robot only reaches the pot.'
         },
@@ -349,7 +349,7 @@
         // Put the metal pan on the blue cloth (cogact vs spatial)
         2700: {
           correct_answer: 'left',
-          explanation: 'Policy A: The left robot reaches the pan, picks it up and puts it on the blue cloth\nPolicy B: The right robot makes no meaningful movement.'
+          explanation: 'Policy A: The left robot reaches the pan and tries to pick it up\nPolicy B: The right robot makes no meaningful movement.'
         },
         // Put the metal pan on the blue cloth_test0 (pi0 vs spatial)
         2800: {
@@ -367,9 +367,9 @@
           explanation: 'Policy A: The left robot reaches the stuffed dog, picks it up and puts beside the pot.\nPolicy B: The right robot only reaches the stuffed dog and picks it up.'
         },
         // Put the stuffed dog inside the pot_test0 (cogact vs robovlm)
-        3301: {
+        3304: {
           correct_answer: 'right',
-          explanation: 'Policy A: The left robot only reaches the stuffed dog.\nPolicy B: The right robot reaches the stuffed dog, picks it up and puts it inside the pot.'
+          explanation: 'Policy A: The left robot does nothing meaningful.\nPolicy B: The right robot reaches the stuffed dog, and tries to pick it up.'
         },
         // Put the stuffed dog inside the pot_test0 (octo vs pi0)
         3331: {
@@ -382,9 +382,9 @@
           explanation: 'Policy A: The left robot only reaches the stuffed dog.\nPolicy B: The right robot reaches the stuffed dog, picks it up and puts it inside the pot.'
         },
         // move blue cloth from center to right bottom corner (cogact vs spatial)
-        3600: {
-          correct_answer: 'left',
-          explanation: 'Policy A: The left robot reaches cloth and moves it a bit to the right bottom corner\nPolicy B: The right robot only reaches the cloth.'
+        3106: { 
+          correct_answer: 'right',
+          explanation: 'Policy A: The left robot reaches the bowl\nPolicy B: The right robot picks up the bowl and moves it to the upper right.'
         },
         // move the blue brush to the upper left corner of the table (pi0 vs xvla)
         4300: {
@@ -422,17 +422,17 @@
           explanation: 'Policy A: The left robot only reaches the banana and tries to pick it up.\nPolicy B: The right robot reaches the banana, picks it up and puts it inside the pot.'
         },
         // put blue cube to left corner of the table (cogact vs robovlm)
-        7517: {
+        7643: {
           correct_answer: 'left',
-          explanation: 'Policy A: The left robot reaches the blue cube and picks it up.\nPolicy B: The right robot makes no meaningful movement.'
+          explanation: 'Policy A: The left robot puts brown toy at the bottom center of the table.\nPolicy B: The right robot makes no meaningful movement.'
         },
         // put knife on towel (pi0 vs spatial)
-        8407: {
+        8422: {
           correct_answer: 'left',
           explanation: 'Policy A: The left robot reaches the knife, picks it up and puts it on the green cloth.\nPolicy B: The right robot only reaches the knife and tries to pick it up.'
         },
         // put knife on towel (spatial vs xvla)
-        8408: {
+        8429: {
           correct_answer: 'right',
           explanation: 'Policy A: The left robot only reaches the knife.\nPolicy B: The right robot reaches the knife, picks it up and puts it on the green cloth.'
         },
@@ -449,7 +449,7 @@
       };
 
       // First 10 indices are used for initial quiz (paid workers only)
-      const INITIAL_QUIZ_INDICES = [13, 25, 52, 638, 695, 2544, 4210, 4683, 4790, 8230];
+      const INITIAL_QUIZ_INDICES = [14, 25, 52, 638, 695, 2548, 4210, 4683, 4790, 8231];
 
       // Fixed main study sequence: 100 pairs, same for every participant.
       // 70 regular pairs + 30 sanity-check pairs (the non-quiz ALL_QUIZ_PAIRS),
@@ -458,23 +458,23 @@
         // Batch 1 (3 sanity: 1, 100, 200)
         2, 150, 350, 500, 650, 750, 950, 1, 100, 200,
         // Batch 2 (3 sanity: 300, 800, 900)
-        1050, 1200, 1400, 1500, 1700, 1800, 1900, 300, 800, 900,
+        1050, 1200, 1400, 1500, 1700, 1800, 1900, 300, 800, 931,
         // Batch 3 (3 sanity: 1100, 1300, 1600)
-        2100, 2200, 2300, 2400, 2500, 9100, 2650, 1100, 1300, 1600,
+        2100, 2200, 2300, 2400, 2500, 9100, 2650, 1065, 1323, 1600,
         // Batch 4 (3 sanity: 2000, 2700, 2800)
         2750, 2900, 3050, 3100, 3200, 3250, 3400, 2000, 2700, 2800,
         // Batch 5 (3 sanity: 3000, 3171, 3301)
-        3500, 3700, 3800, 3900, 4000, 4100, 4150, 3000, 3171, 3301,
+        3500, 3700, 3800, 3900, 4000, 4100, 4150, 3000, 3171, 3304,
         // Batch 6 (3 sanity: 3331, 3340, 3600)
-        4400, 4500, 4600, 4800, 4900, 5000, 5100, 3331, 3340, 3600,
+        4400, 4500, 4600, 4800, 4900, 5000, 5100, 3331, 3340, 3106,
         // Batch 7 (3 sanity: 4300, 4700, 6400)
         5200, 5300, 5400, 5500, 5600, 5700, 5800, 4300, 4700, 6400,
         // Batch 8 (3 sanity: 7400, 7404, 7411)
         5900, 6000, 6100, 6200, 6300, 6500, 6600, 7400, 7404, 7411,
         // Batch 9 (3 sanity: 7423, 7517, 8407)
-        6700, 6800, 6900, 7000, 7100, 7200, 7300, 7423, 7517, 8407,
+        6700, 6800, 6900, 7000, 7100, 7200, 7300, 7423, 7643, 8422,
         // Batch 10 (3 sanity: 8408, 8503, 8506)
-        7450, 10010, 7700, 7800, 7900, 8000, 8100, 8408, 8503, 8506
+        7450, 10010, 7700, 7800, 7900, 8000, 8100, 8429, 8503, 8506
       ];
 
       // ========== END CONFIGURATION ==========
